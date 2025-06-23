@@ -170,4 +170,99 @@
 
   exports.postwalk = postwalk;
 
+  /**
+   * Safely get a property from a nested path in an object
+   * Example: getPath(patient, "name.0.given.0")
+   * 
+   * @param {Object} obj - The object to extract the value from
+   * @param {String} path - The path string (e.g., "name.0.given.0")
+   * @return {*} - The value at the path or undefined if not found
+   */
+  var getPath = function(obj, path) {
+    if (!obj || !path) {
+      return undefined;
+    }
+    
+    // Handle dot notation
+    var parts = path.split('.');
+    var current = obj;
+    
+    for (var i = 0; i < parts.length; i++) {
+      var part = parts[i];
+      
+      // Skip empty parts
+      if (!part) continue;
+      
+      // Handle array indices
+      if (!isNaN(part)) {
+        part = parseInt(part, 10);
+      }
+      
+      // If current is null/undefined or doesn't have the property, return undefined
+      if (current == null || !current.hasOwnProperty(part)) {
+        return undefined;
+      }
+      
+      current = current[part];
+    }
+    
+    return current;
+  };
+  
+  exports.getPath = getPath;
+
+  /**
+   * Deep clone an object or array
+   * 
+   * @param {*} obj - The object to clone
+   * @return {*} A deep copy of the object
+   */
+  var clone = function(obj) {
+    // Use structuredClone if available for best performance and full support
+    if (typeof structuredClone === 'function') {
+      try {
+        return structuredClone(obj);
+      } catch (e) {
+        // Fall back to manual cloning if structuredClone fails
+        // (like with functions, which structuredClone doesn't support)
+      }
+    }
+    
+    // Primitive types - return as is
+    if (obj === null || typeof obj !== 'object') {
+      return obj;
+    }
+    
+    // Date
+    if (obj instanceof Date) {
+      return new Date(obj.getTime());
+    }
+    
+    // RegExp
+    if (obj instanceof RegExp) {
+      return new RegExp(obj);
+    }
+    
+    // Array
+    if (Array.isArray(obj)) {
+      return obj.map(function(item) { 
+        return clone(item); 
+      });
+    }
+    
+    // Object
+    if (type(obj) === 'object') {
+      var copy = {};
+      Object.keys(obj).forEach(function(key) {
+        copy[key] = clone(obj[key]);
+      });
+      return copy;
+    }
+    
+    // If we got here, just return the original
+    return obj;
+  };
+  
+  exports.clone = clone;
+
 }).call(this);

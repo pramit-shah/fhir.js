@@ -12,17 +12,92 @@
     var url = require('./middlewares/url');
     var decorate = require('./decorate');
 
+    // Import our enhanced modules
+    var errorHandling = require('./error-handling');
+    var dependencyManager = require('./dependency-manager');
+    var logging = require('./logging');
+
     var cache = {};
+    var integration = require('./integration');
 
+    // Initialize the logger
+    var logger = logging.getLogger('fhir:core');
 
-    var fhir = function(cfg, adapter){
+    // Validate adapter configuration
+    var validateAdapter = function(adapter) {
+        if (!adapter) {
+            throw new Error('FHIR.js: No adapter specified');
+        }
+        
+        logger.debug('Validating adapter', { 
+            adapter: adapter.name || 'unnamed',
+            methods: Object.keys(adapter).filter(function(k) { 
+                return typeof adapter[k] === 'function'; 
+            })
+        });
+        
+        // Essential adapter methods
+        var requiredMethods = ['http', 'defer'];
+        var missingMethods = requiredMethods.filter(function(method) {
+            return !adapter[method];
+        });
+        
+        if (missingMethods.length) {
+            logger.warn('Adapter is missing required methods', { missing: missingMethods });
+            throw new Error('FHIR.js: Adapter is missing required methods: ' + missingMethods.join(', '));
+        }
+        
+        // Register the adapter in the dependency manager
+        dependencyManager.register('adapter', adapter);
+        
+        return adapter;
+    };        var fhir = function(cfg, adapter){
+        // Set up global configuration
+        logging.configure({
+            level: (cfg && cfg.logging && cfg.logging.level) || 'warn',
+            includeTimestamps: true,
+            includeComponent: true
+        });
+        
+        logger.info('Initializing FHIR.js client', { config: cfg });
+        
+        // Validate the adapter before proceeding
+        adapter = validateAdapter(adapter);
+        
         var Middleware = M.Middleware;
         var $$Attr = M.$$Attr;
 
         var $$Method = function(m){ return $$Attr('method', m);};
         var $$Header = function(h,v) {return $$Attr('headers.' + h, v);};
 
-        var $Errors = Middleware(errors);
+        // Enhanced error middleware that uses our error handling system
+        var enhancedErrorsMiddleware = function(h) {
+            return function(args) {
+                var defer = adapter.defer();
+                
+                h(args).then(function(data) {
+                    defer.resolve(data);
+                }, function(err) {
+                    // Ensure error is properly enriched
+                    var enrichedError = errorHandling.enrichError(err, {
+                        url: args.url,
+                        method: args.method,
+                        request: args
+                    });
+                    
+                    // Report the error (unless suppressed)
+                    if (!args.suppressErrors) {
+                        errorHandling.reportError(enrichedError);
+                    }
+                    
+                    defer.reject(enrichedError);
+                });
+                
+                return defer.promise;
+            };
+        };
+        
+        var $Errors = Middleware(enhancedErrorsMiddleware);
         var Defaults = Middleware(config(cfg, adapter))
                 .and($Errors)
                 .and(auth.$Basic)
@@ -38,7 +113,9 @@
         var DELETE = Defaults.and($$Method('DELETE'));
         var PATCH = Defaults.and($$Method('PATCH'));
 
-        var http = transport.Http(cfg, adapter);
+        // Use enhanced HTTP if configured, otherwise fall back to standard HTTP
+        var useEnhanced = cfg.useEnhancedHttp !== false; // Default to true unless explicitly set to false
+        var http = useEnhanced ? transport.EnhancedHttp(cfg, adapter) : transport.Http(cfg, adapter);
 
         var Path = url.Path;
         var BaseUrl = Path(cfg.baseUrl);
@@ -73,6 +150,16 @@
                 read: GET.and(metaTarget.slash("$meta")).end(http)
             },
             search: GET.and(resourceTypePath).and(pt.$WithPatient).and(query.$SearchParams).and($Paging).end(http),
+            // Add multi-resource search capability
+            multiTypeSearch: GET.and(BaseUrl).and(query.$SearchParams).and($Paging).end(http),
+            
+            // Add compartment search capability
+            compartmentSearch: GET.and(BaseUrl.slash(":compartment").slash(":id").slash(":resourceType")).and(query.$SearchParams).and($Paging).end(http),
+            
+            // Helper method for chained search
+            chainedSearch: function(chainPath, value) {
+                return query.chainedSearch(chainPath, value);
+            },
             update: PUT.and(resourcePath).and(ReturnHeader).end(http),
             conditionalUpdate: PUT.and(resourceTypePath).and(query.$SearchParams).and(ReturnHeader).end(http),
             conditionalDelete: DELETE.and(resourceTypePath).and(query.$SearchParams).and(ReturnHeader).end(http),
@@ -84,5 +171,115 @@
             patch: PATCH.and(resourcePath).and($$Header('Content-Type', 'application/json-patch+json')).end(http)
         }, adapter);
     };
+    
+    // Export integration utilities as well
+    fhir.utils = utils;
+    fhir.integration = integration;
+    
+    // Add convenience methods for creating adapters
+    fhir.fetchAdapter = function(fetchFn, options) {
+        return integration.createFetchAdapter(fetchFn, options);
+    };
+    
+    // Create middleware for response caching
+    fhir.cacheMiddleware = integration.createCacheMiddleware;
+    
+    // Add searchWithReferences as a method on the FHIR client prototype
+    var origFhir = fhir;
+    fhir = function(config, adapter) {
+        var client = origFhir(config, adapter);
+        
+        // Add enhanced searchWithReferences method to client
+        client.searchWithReferences = function(searchParams, resolveParams) {
+            // Use the integration helper but with 'this' as the client
+            return integration.searchWithReferences(this, searchParams, resolveParams);
+        };
+        
+        // Store adapter for middleware enhancement
+        client._adapter = adapter;
+        
+        // Add error handling capabilities
+        client.errors = {
+            // Expose error type constants
+            types: errorHandling.ErrorTypes,
+            
+            // Allow registering custom error reporter
+            registerErrorReporter: errorHandling.registerErrorReporter,
+            
+            // Method to manually report an error
+            report: errorHandling.reportError,
+            
+            // Method to check if error is retriable
+            isRetriable: function(error) {
+                var classification = errorHandling.classifyError(error);
+                return classification && classification.retriable;
+            },
+            
+            // Method to retry a failed operation
+            retry: function(failedOperation, options) {
+                options = options || {};
+                var maxRetries = options.maxRetries || 3;
+                var initialDelay = options.initialDelay || 1000;
+                var factor = options.factor || 2;
+                var jitter = options.jitter !== false;
+                
+                return errorHandling.createRetryPolicy(failedOperation, {
+                    maxRetries: maxRetries,
+                    baseDelay: initialDelay,
+                    exponential: true,
+                    factor: factor,
+                    jitter: jitter
+                });
+            }
+        };
+        
+        // Add dependency management
+        client.dependencies = {
+            // Register a dependency
+            register: dependencyManager.register,
+            
+            // Get a dependency
+            get: dependencyManager.get,
+            
+            // Check for feature
+            hasFeature: function(featureName) {
+                return dependencyManager.hasFeature(featureName);
+            },
+            
+            // Get all registered features
+            getFeatures: dependencyManager.getFeatures
+        };
+        
+        // Add logging capabilities
+        client.logging = {
+            // Configure logging
+            configure: logging.configure,
+            
+            // Create a logger
+            getLogger: logging.getLogger,
+            
+            // Set global log level
+            setLevel: logging.setLevel,
+            
+            // Log level constants
+            levels: logging.LogLevels
+        };
+        
+        return client;
+    };
+    
+    // Copy over properties from original fhir function
+    for (var key in origFhir) {
+        if (origFhir.hasOwnProperty(key)) {
+            fhir[key] = origFhir[key];
+        }
+    }
+
+    // Export main FHIR client
     module.exports = fhir;
+    
+    // Also expose our utility systems directly
+    module.exports.errorHandling = errorHandling;
+    module.exports.dependencyManager = dependencyManager;
+    module.exports.logging = logging;
 }).call(this);

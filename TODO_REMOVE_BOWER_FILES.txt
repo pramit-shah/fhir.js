@@ -1,0 +1,5 @@
+Remove the following files from the repository:
+- bower.json
+- script/bower-release.sh
+
+They are no longer needed as Bower is deprecated.

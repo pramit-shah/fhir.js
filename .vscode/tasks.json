@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Integration Tests",
+			"type": "shell",
+			"command": "cd /workspaces/fhir.js && npm install --no-save abort-controller && mocha test/integrationSpec.coffee --require coffeescript/register",
+			"group": "test",
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			]
+		}
+	]
+}

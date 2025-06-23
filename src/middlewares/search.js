@@ -26,7 +26,13 @@
     $exact: ':exact',
     $missing: ':missing',
     $null: ':missing',
-    $text: ':text'
+    $text: ':text',
+    $has: ':has'  // Add support for _has parameter
+  };
+
+  // Support for _has parameter to filter on related resources
+  var handleHasParameter = function(resource, reference, criteria) {
+    return '_has:' + resource + ':' + reference + ':' + criteria;
   };
 
   var isOperator = function(v) {
@@ -100,16 +106,43 @@
     return reduceMap(includes, function(acc, arg) {
       var k, v;
       k = arg[0], v = arg[1];
+      
+      // k format should be "sourceResource.searchParameter"
+      var parts = k.split('.');
+      if (parts.length !== 2) {
+        console.warn("_has parameter should use 'sourceResource.searchParameter' format");
+      }
+      
       return acc.concat((function() {
         switch (type(v)) {
-        case 'array':
-          return v.map(function(x) {
+        case 'object':
+          // Handle more complex _has queries with nested criteria
+          return Object.keys(v).map(function(criteria) {
             return {
               param: '_has',
-              value: k + "=" + x
+              value: k + ":" + criteria + "=" + v[criteria]
             };
           });
+        case 'array':
+          return v.map(function(x) {
+            // Support for both simple values and key-value pairs
+            if (type(x) === 'object') {
+              return Object.keys(x).map(function(criteria) {
+                return {
+                  param: '_has',
+                  value: k + ":" + criteria + "=" + x[criteria]
+                };
+              });
+            } else {
+              return {
+                param: '_has',
+                value: k + "=" + x
+              };
+            }
+          }).flat();
         case 'string':
+        case 'number':
+        case 'boolean':
           return [
             {
               param: '_has',
@@ -168,27 +201,83 @@
 
   var buildSearchParams = function(query) {
     var p, ps, value;
-    var excludeEncode = ['_include', '_revinclude', '_has']
+    // Parameters that should not be URL-encoded because they have special formatting
+    var excludeEncode = ['_include', '_revinclude', '_has'];
+    
+    // Detect if we have any special parameters that require additional handling
+    var hasSpecialParams = false;
+    if (query.$has || query._has || query.$include || query.$revInclude) {
+      hasSpecialParams = true;
+    }
+    
     ps = (function() {
       var i, len, ref, results;
       ref = linearizeParams(query);
       results = [];
       for (i = 0, len = ref.length; i < len; i++) {
         p = ref[i];
-        if (excludeEncode.indexOf(p.param) === -1)
-          value = encodeURIComponent(p.value);
-        else
-          value = p.value
-        results.push([p.param, p.modifier, (p.param == '_has') ? ':' : '=', p.operator, value].filter(identity).join(''));
+        
+        // Handle different parameter types appropriately
+        if (excludeEncode.indexOf(p.param) === -1) {
+          // Standard parameters are URL-encoded
+          if (Array.isArray(p.value)) {
+            // For array values, handle each item individually
+            value = p.value.map(function(v) {
+              return encodeURIComponent(v);
+            }).join(',');
+          } else {
+            value = encodeURIComponent(p.value);
+          }
+        } else {
+          // Special parameters like _has, _include use their own format
+          value = p.value;
+        }
+        
+        // Construct the parameter string based on its type
+        var separator = (p.param === '_has' || p.param.indexOf('_has:') === 0) ? ':' : '=';
+        results.push([p.param, p.modifier, separator, p.operator, value].filter(identity).join(''));
       }
       return results;
     })();
     return ps.join("&");
   };
 
+  // Helper function to build chained search parameters
+  var buildChainedSearch = function(chainPath, value) {
+    if (!chainPath || !value) return null;
+    
+    var parts = chainPath.split('.');
+    var result = {};
+    
+    // Handle simple chained search (e.g., "subject.name=value")
+    if (parts.length === 2) {
+      result[parts[0] + '.' + parts[1]] = value;
+      return result;
+    }
+    
+    // Handle complex chained search using _has
+    if (parts.length >= 3) {
+      var sourceResource = parts[0]; // e.g., "Observation"
+      var searchParam = parts[1];    // e.g., "subject"
+      var targetParam = parts.slice(2).join('.'); // e.g., "name" or "name.given"
+      
+      // Create a properly structured _has parameter
+      var hasParam = {};
+      hasParam['$has'] = {};
+      hasParam['$has'][sourceResource + '.' + searchParam] = {};
+      hasParam['$has'][sourceResource + '.' + searchParam][targetParam] = value;
+      
+      return hasParam;
+    }
+    
+    return null;
+  };
+  
   exports._query = linearizeParams;
 
   exports.query = buildSearchParams;
+
+  exports.chainedSearch = buildChainedSearch;
 
   var mw = require('./core');
 

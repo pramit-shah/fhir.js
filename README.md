@@ -1,14 +1,23 @@
-fhir.js
-=======
+# fhir.js
 
-[![npm version](https://badge.fury.io/js/fhir.js.svg)](https://badge.fury.io/js/fhir.js)
+## Major Improvements (2025)
 
-[![Build Status](https://travis-ci.org/FHIR/fhir.js.svg)](https://travis-ci.org/FHIR/fhir.js)
-
-[![Gitter chat](https://badges.gitter.im/FHIR/fhir.js.png)](https://gitter.im/FHIR/fhir.js)
-
-
-JavaScript client for FHIR
+- Modernized build system: Webpack 5, latest Mocha/Karma, and CoffeeScript 2 support
+- TypeScript definitions included and auto-discovered by editors
+- Node.js 14+ and browser support (with ES modules and bundlers)
+- Peer dependencies for Angular and jQuery for better compatibility
+- Removed Bower and legacy scripts
+- Improved multi-resource FHIR search (including _has and chained queries)
+- Comprehensive error handling system with classification, retry policies, and error reporting
+- Advanced dependency management with feature detection and fallbacks
+- Multi-level logging system with contextual information and performance tracking
+- Enhanced adapters (Node.js, Angular, jQuery, YUI) with consistent error handling
+- Example scripts for Node.js and browser usage, including error handling scenarios
+- Advanced resource caching with smart invalidation and persistence options
+- Memory optimization and performance tuning for high-volume applications
+- Priority-based request handling with optimized batch processing
+- Server health monitoring and adaptive retry mechanisms
+- Funding and maintainers info added
 
 ## Goals:
 
@@ -22,7 +31,7 @@ JavaScript client for FHIR
 
 `Node.js` is required for build.
 
-We recommend installing Node.js using [nvm](https://github.com/creationix/nvm/blob/master/README.md#installation)
+We recommend installing Node.js using [nvm](https://github.com/nvm-sh/nvm)
 
 Build & test:
 
@@ -32,456 +41,284 @@ cd fhir.js
 npm install
 
 # build fhir.js
-npm run-script build
+npm run build
 
 # run tests in node
-npm run-script test
+npm run test
 
-# run tests in phantomjs
-npm run-script integrate
+# run tests in browser/karma
+npm run integrate
 ```
 
-## API
+## TypeScript
 
+TypeScript definitions are included. Use `import fhir from 'fhir.js'` in your TS project.
 
-### Create instance of the FHIR client
+## Advanced Features
 
-To communicate with concrete FHIR server, you can
-create instance of the FHIR client, passing a
-configuration object & adapter object.  Adapters are
-implemented for concrete frameworks/libs (see below).
+### Error Handling
 
-```
-var config = {
-  // FHIR server base url
-  baseUrl: 'http://myfhirserver.com',
-  auth: {
-     bearer: 'token',
-     // OR for basic auth
-     user: 'user',
-     pass: 'secret'
-  },
-  // Valid Options are 'same-origin', 'include'
-  credentials: 'same-origin',
-  headers: {
-    'X-Custom-Header': 'Custom Value',
-    'X-Another-Custom': 'Another Value',
-  }
-}
-
-myClient = fhir(config, adapter)
-```
-
-#### Config Object
-The config object is an object that is passed through the middleware chain. Any values in the config object that are not mutated by middleware will be available to the adapter.
-
-Because middleware mutates the config, it is strongly recommended when implementing an adapter to not directly rely on config passed in.
-
-##### baseUrl
-This is the full url to your FHIR server. Resources will be appended to the end of it.
-
-##### auth
-This is an object representing your authentication requirements. Possible options include:
-
-###### bearer
-This is your Bearer token when provided, it will add an `Authorization: Bearer <token>` header to your requests.
-
-###### user
-This is your Basic auth Username.
-
-When you provide both user name and password, basic auth will be used.
-
-###### pass
-This is your basic auth password.
-
-When you provide both user name and password, basic auth will be used.
-
-##### credentials
-This option controls the behaviour of sending cookies to the remote server. Refer to the table below for how to configure the option for your desired adapter.
-
-| Adapter  | credentials   | Result                    |
-|----------|---------------|---------------------------|
-| Native   | 'same-origin' | Cookies are sent to the server, if it is on the same host as the origin sender |
-| Native   | 'include'     | Send cookies to all hosts |
-| jQuery   | 'same-origin' | ignored                   |
-| jQuery   | 'include'     | Send cookies to all hosts |
-| yui      | 'same-origin' | ignored                   |
-| yui      | 'include'     | Send cookies to all hosts |
-| angular  | 'same-origin' | ignored                   |
-| angular  | 'include'     | ignored                   |
-| node     | 'same-origin' | ignored                   |
-| node     | 'include'     | ignored                   |
-
-##### headers
-A key:value object that represents headers. This object is passed through to you configured adapter.
-
-If you choose to add custom headers to your requests, you should ensure that the server that you are talking to supplies the appropriate headers. Further reading on Allowed Headers: https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS
-```javascript
-const config = {
-  headers: {
-    'X-Custom-Header': 'Custom Value',
-    'X-Another-Custom': 'Another Value',
-  }
-}
-```
-
-### Adapter implementation
-
-Currently each adapter must implement an
-`http(requestObj)` function:
-
-Structure of requestObj:
-
-* `method` - http method (GET|POST|PUT|DELETE)
-* `url` - url for request
-* `headers` - object with headers (i.e. {'Category': 'term; scheme="sch"; label="lbl"'}
-
-and return promise (A+)
-
-http(requestObj).then(success, error)
-
-where:
-`success` - success callback, which should be called with (data, status, headersFn, config)
-
-  * data - parsed body of responce
-  * status - responce HTTP status
-  * headerFn - function to get header, i.e. headerFn('Content')
-  * config - initial requestObj passed to http
-
-`error` - error callback, which should be called with (data, status, headerFn, config)
-
-
-Here are implementations for:
-
-* [AngularJS adapter](https://github.com/FHIR/fhir.js/blob/master/src/adapters/angularjs.js)
-* [jQuery adapter](https://github.com/FHIR/fhir.js/blob/master/src/adapters/jquery.js)
-* [Node adapter](https://github.com/FHIR/fhir.js/blob/master/src/adapters/node.js)
-* [YUI adapter](https://github.com/FHIR/fhir.js/blob/master/src/adapters/yui.js)
-* [Native adapter](https://github.com/FHIR/fhir.js/blob/master/src/adapters/native.js)
-
-### Conformance & Profiles
-
-### Resource's CRUD
-
-#### Create Resource
-
-To create a FHIR resource, call
-`myClient.create(entry, callback, errback)`, passing
-an object that contains the following properties:
-
-* `resource` (required) - resource in FHIR json
-* `tags` (optional) - list of categories (see below)
-
-In case of success,the  callback function will be
-invoked with an object that contains the following
-attributes:
-
-* `id` - url of created resource
-* `content` - resource json
-* `category` - list of tags
+The library includes a comprehensive error handling system that provides:
 
 ```javascript
-
-var entry = {
-  category: [{term: 'TAG term', schema: 'TAG schema', label: 'TAG label'}, ...]
-  resource: {
-    resourceType: 'Patient',
-    //...
-  }
-}
-
-myClient.create(entry,
- function(entry){
-    console.log(entry.id)
- },
- function(error){
-   console.error(error)
- }
-)
-
-```
-
-#### Get resource
-
-To get one specific object from a resource (usually by id), call `fhir.read({type: resourceType})`. To specify the patient identifier, call `fhir.read({type: resourceType, patient: patientIdentifier})`
-
-Examples:
-
-```js
-fhir.read({type: 'Patient', patient: '8673ee4f-e2ab-4077-ba55-4980f408773e'})
-```
-
-#### Search Resource
-
-To search a resource, call `fhir.search({type: resourceType, query: queryObject})`,
-where queryObject syntax `fhir.js` adopts
-mongodb-like query syntax ([see](http://docs.mongodb.org/manual/tutorial/query-documents/)):
-
-```javascript
-{name: 'maud'}
-//=> name=maud
-
-{name: {$exact: 'maud'}}
-//=> name:exact=maud
-
-{name: {$or: ['maud','dave']}}
-//=> name=maud,dave
-
-{name: {$and: ['maud',{$exact: 'dave'}]}}
-//=> name=maud&name:exact=Dave
-
-{birthDate: {$gt: '1970', $lte: '1980'}}
-//=> birthDate=gt1970&birthDate=lte1980
-
-{subject: {$type: 'Patient', name: 'maud', birthDate: {$gt: '1970'}}}
-//=> subject:Patient.name=maud&subject:Patient.birthDate=gt1970
-
-{'subject.name': {$exact: 'maud'}}
-//=> subject.name:exact=maud
-
-```
-
-#### Update Resource
-
-To update a resource, call `fhir.update({type: resourceType, id: identifier, resource: resourceObject})`.
-In case of success,the  callback function will be invoked.
-
-Example: 
-```javascript
- 	this.fhirClient.update({
-            type: "Patient",
-            id: 1,
-            resource: {
-		name: 'New Name'
-            }
-        }).catch(function(e){
-            console.log('An error happened while updating patient: \n' + JSON.stringify(e));
-            throw e;
-        }).then(function(bundle){
-            console.log('Updating patient successed');
-            return bundle;
-        });
-```
-
-#### Delete Resource
-
-To update a resource, call `fhir.delete({type: resourceType, id: identifier})`.
-
-For more information see [tests](https://github.com/FHIR/fhir.js/blob/master/test/querySpec.coffee)
-
-## AngularJS adapter: `ng-fhir`
-
-AngularJS adapter after `npm run-script build` can be found at `dist/ngFhir.js`
-
-
-Usage:
-
-```javascript
-angular.module('app', ['ng-fhir'])
-  .config(['$fhirProvider', function ($fhirProvider) {
-    $fhirProvider.baseUrl = 'http://try-fhirplace.hospital-systems.com';
-    $fhirProvider.auth = {
-      user: 'user',
-      pass: 'secret'
-    };
-    $fhirProvider.credentials = 'same-origin'
-  }])
-  .controller('mainCtrl', ['$scope', '$fhir', function ($scope, $fhir) {
-    $fhir.search(
-      {
-        type: 'Patient',
-        query: {name: 'emerald'}
-      }).then(
-      function (successData) {
-        $scope.patients = successData.data.entry;
-
-      },
-      function (failData) {
-        $scope.error = failData;
-      }
-    );
-  }]);  
-```
-
-## jQuery adapter: `jqFhir`
-
-jQuery build can be found at `dist/jqFhir.js`
-
-[Example app](http://embed.plnkr.co/e4BKr0M07q4FVVQeP6f4/)
-
-
-Usage:
-
-```html
-<script src="./jquery-???.min.js"> </script>
-<script src="./jqFhir.js"> </script>
-```
-
-
-```javascript
-// create fhir instance
-var fhir = jqFhir({
-    baseUrl: 'https://ci-api.fhir.me',
-    auth: {user: 'client', pass: 'secret'}
-})
-
-fhir.search({type: 'Patient', query: {name: 'maud'}})
-.then(function(bundle){
-  console.log('Search patients', bundle)
-})
-```
-
-## Node.js adapter: `npm install fhir.js`
-
-Via NPM you can `npm install fhir.js`. (If you want to work on the source code,
-you can compile coffee to js via `npm install`, and use `./lib/adapters/node`
-as an entrypoint.)
-
-```
-var mkFhir = require('fhir.js');
-
-var client = mkFhir({
-    baseUrl: 'http://try-fhirplace.hospital-systems.com'
-});
-
-client
-    .search( {type: 'Patient', query: { 'birthdate': '1974' }})
-    .then(function(res){
-        var bundle = res.data;
-        var count = (bundle.entry && bundle.entry.length) || 0;
-        console.log("# Patients born in 1974: ", count);
-    })
-    .catch(function(res){
-        //Error responses
-        if (res.status){
-            console.log('Error', res.status);
-        }
-
-        //Errors
-        if (res.message){
-            console.log('Error', res.message);
-        }
+// Register a custom error reporter
+client.errors.registerErrorReporter(function(error) {
+  console.error(`Error: ${error.userMessage}`);
+  
+  // Log to monitoring service in production
+  if (process.env.NODE_ENV === 'production') {
+    sendToMonitoringService({
+      message: error.userMessage,
+      type: error.classification,
+      status: error.status,
+      url: error.url
     });
+  }
+});
 
-```
+// Check if an error is retriable
+const canRetry = client.errors.isRetriable(error);
 
-## YUI adapter: `yuiFhir`
-
-YUI build can be found at `dist/yuiFhir.js`
-
-NOTE: The current implementation creates a YUI sandbox per request which is expensive.
-
-Usage:
-
-```html
-<script src="./yui-???.min.js"> </script>
-<script src="./yuiFhir.js"> </script>
-```
-
-```javascript
-// create fhir instance
-var fhir = jqFhir({
-    baseUrl: 'https://ci-api.fhir.me',
-    auth: {user: 'client', pass: 'secret'}
+// Implement retry with exponential backoff
+client.errors.retry(failingOperation, { 
+  maxRetries: 3, 
+  initialDelay: 1000,
+  factor: 2,
+  jitter: true
 })
-
-fhir.search(type: 'Patient', query: {name: 'maud'}, success: function(bundle) {}, error: function() {})
+.then(result => console.log('Success after retry!', result))
+.catch(error => console.error('All retries failed', error));
 ```
 
-## Native adapter: `npm install fhir.js`
+Error types available include:
+- `NETWORK`: Network connectivity issues
+- `TIMEOUT`: Request timeouts
+- `AUTH`: Authentication/authorization failures
+- `SERVER`: Server-side errors (5xx)
+- `VALIDATION`: Invalid requests (400, 422)
+- `CLIENT`: Other client errors
+- `PARSING`: Response parsing failures
+- `REFERENCE`: Invalid resource references
+- `PROFILE`: FHIR profile validation failures
 
-The Native adapter is part of fhir.js npm module. The adapter can be consumed in a few ways, the simplest is documented below.
+### Dependency Management
 
-### Usage
-This assumes use of browserify or similar bundler.
-
-1. `npm install fhir.js`
-2. In your js somewhere use the following snippet.
-
+The library includes a dependency management system:
 
 ```javascript
-// Include the adapter
-var nativeFhir = require('fhir.js/src/adapters/native');
-
-// Create fhir instance
-var fhir = nativeFhir({
-    baseUrl: 'https://ci-api.fhir.me',
-    auth: {user: 'client', pass: 'secret'}
+// Register a utility or dependency
+client.dependencies.register('formattingUtils', {
+  formatDate: date => new Date(date).toISOString().substring(0, 10),
+  parseDate: dateStr => new Date(dateStr)
 });
 
-// Execute the search
-fhir.search({type: 'Patient', query: {name: 'maud'}}).then(function(response){
-    //manipulate your data here.
-});
+// Retrieve a registered dependency
+const formatter = client.dependencies.get('formattingUtils');
+console.log(formatter.formatDate(new Date()));
+
+// Check for environment features
+if (client.dependencies.hasFeature('fetch')) {
+  console.log('Native fetch is available!');
+}
+
+// Check adapter capabilities
+const features = client.dependencies.getFeatures();
+console.log('CORS support:', features.cors);
 ```
 
-## For Developers
+### Logging System
 
-FHIR.js is built on top of **middleware** concept.
-What is middleware?
-This is a high order function of shape:
+The library includes a flexible logging system:
+
+```javascript
+// Configure global logging
+client.logging.configure({
+  level: 'info',
+  includeTimestamps: true,
+  includeComponent: true,
+  colorizeConsole: true
+});
+
+// Create component-specific loggers
+const logger = client.logging.getLogger('myComponent');
+
+// Log at different levels
+logger.debug('Detailed debugging information');
+logger.info('General operational information');
+logger.warn('Potential issues or warnings');
+logger.error('Error events that might still allow the application to continue');
+
+// Set log level dynamically
+client.logging.setLevel('warn'); // Only warnings and errors will be logged
+```
+
+See the [error-handling-example.js](example/error-handling-example.js) for more examples of these features.
+
+## Browser Builds
+
+Use the files in `dist/` after running `npm run build`.
+
+## Bower
+
+Bower is no longer supported. See REMOVED_BOWER_README_NOTICE.md for details.
+
+## Enhanced Integration Features
+
+- **Cross-version compatibility**: Automatically handles both DSTU2 and R4 bundle formats
+- **Enhanced HTTP**: Configurable timeouts, retries, and abort capability
+- **Fetch API adapter**: Easy integration with modern Fetch API instead of XMLHttpRequest
+- **Reference resolution**: Improved handling of references across different FHIR versions
+- **Response caching**: Optional middleware for caching GET responses
+- **Multi-resource search**: Support for complex cross-resource queries with _has parameters
+- **Chainable middleware**: Compose your own middleware stack
+- **Seamless integration**: Combined multi-resource search and reference resolution
+
+### Working with Enhanced Features
+
+#### Enhanced HTTP with timeouts and retries
 
 ```js
-var mw  = function(next){
-   return function(args){
-     if (...) // some logic{
-        return next(args); //next mw in chain
-     } else {
-        return promise; //short circuit chain
-     }
-  }
+// Configure enhanced HTTP with timeouts and retries
+const client = fhir({
+  baseUrl: 'http://myfhirserver.com/fhir',
+  useEnhancedHttp: true,  // Enabled by default
+  timeout: 10000,         // 10 second timeout
+  retries: 2,             // Retry failed requests twice
+  retryDelay: 1000        // Wait 1 second between retries
+}, adapter);
+
+// The client's requests can be aborted if needed
+const promise = client.search({type: 'Patient'});
+// Later if needed:
+if (promise.abort) {
+  promise.abort(); // Cancel the request
 }
 ```
 
-Using function Middleware(mw) you can get composable middle-ware (with .and(mw) method):
-
-```
-mwComposition = Middleware(mw).and(anotherMw).and(anotherMw);
-```
-
-Every API function is built as chain of middlewares with end handler in the end:
+#### Working with the Fetch API
 
 ```js
-conformance = $GET.and(BaseUrl.slash("metadata")).end(http)
-create =  $POST.and($resourceTypePath).and($ReturnHeader).and($JsonData).end(http),
+// Create a client using the Fetch API instead of XMLHttpRequest
+const fetchAdapter = fhir.fetchAdapter(fetch, {
+  credentials: 'include', // Include cookies in cross-origin requests
+  timeout: 30000          // 30 second timeout
+});
+
+const client = fhir({
+  baseUrl: 'http://myfhirserver.com/fhir'
+}, fetchAdapter);
 ```
 
-## Release Notes
+#### Multi-resource searching with _has parameter
 
-### release 0.1
+```js
+// Find all patients who have observations with high systolic blood pressure
+client.search({
+  type: 'Patient',
+  query: {
+    $has: {
+      'Observation.subject': {
+        'code': 'http://loinc.org|8480-6',
+        'value-quantity': 'gt140'
+      }
+    }
+  })
+  .then(handleBundle)
+  .catch(handleError);
 
-API changes history is split into 3 fns:
+// Find all female patients who have active coverage
+client.search({
+  type: 'Patient',
+  query: {
+    gender: 'female',
+    $has: {
+      'Coverage.beneficiary': {
+        status: 'active'
+      }
+    }
+  }
+});
+```
 
-* fhir.history
-* fhir.typeHistory
-* fhir.resourceHistory
+#### Combined search and reference resolution
 
-## TODO
+```js
+// Search and automatically resolve references in one operation
+const searchParams = {
+  type: 'Patient', 
+  query: {
+    $has: {
+      'Coverage.beneficiary': {
+        status: 'active'
+      }
+    },
+    $include: {
+      Patient: 'organization'
+    }
+  }
+};
 
-* npm package
-* bower package
+// References to resolve
+const resolveParams = ['Patient.managingOrganization'];
 
-## Contribute
+// Combined search and reference resolution
+fhir.integration.searchWithReferences(client, searchParams, resolveParams)
+  .then(results => {
+    // Access the search results
+    const patients = results.data.entry;
+    
+    // Access resolved references
+    const orgReference = 'Organization/123';
+    const organization = results.resolvedReferences[orgReference];
+    
+    console.log(`Patient is managed by ${organization.name}`);
+  });
+```
 
-Join us by [github issues](https://github.com/FHIR/fhir.js/issues) or pull-requests
+#### Response caching
 
-## License
+```js
+// Create a cache middleware with 5 minute TTL
+const cacheMiddleware = fhir.cacheMiddleware({
+  ttl: 300000,  // 5 minutes in milliseconds
+  size: 100     // Store up to 100 responses
+});
 
-Released under the MIT license.
+// Apply to an existing adapter
+const originalAdapter = client._adapter;
+const cachedAdapter = {
+  defer: originalAdapter.defer,
+  http: cacheMiddleware(originalAdapter.http)
+};
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
+// Create a new client with caching
+const cachedClient = fhir({
+  baseUrl: 'http://myfhirserver.com/fhir'
+}, cachedAdapter);
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+// Now repeated GET requests will use the cache
+cachedClient.read({type: 'Patient', id: '123'});
+```
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#### Normalizing bundle formats
+
+```js
+// Works with both R4 and DSTU2 bundle formats
+client.search({type: 'Patient'})
+  .then(bundle => {
+    // Normalize bundle to have consistent access patterns
+    const normalized = fhir.integration.normalizeBundle(bundle);
+    
+    // Now all entries have both .resource and .content properties
+    normalized.entry.forEach(entry => {
+      console.log(entry.resource.id);  // Works for both R4 and DSTU2
+    });
+  });
+```
+
+## Documentation
+
+- [API Reference](./docs/API.md)
+- [Error Handling Guide](./docs/ERROR_HANDLING.md)
+- [Performance Optimization Guide](./docs/PERFORMANCE_OPTIMIZATION.md)
+- [Integration Examples](./docs/INTEGRATION.md)
