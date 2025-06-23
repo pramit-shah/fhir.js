@@ -1,13 +1,25 @@
 {
-  "name": "fhir.js",
-  "version": "0.1.0",
-  "description": "FHIR javascript client",
+  "name": "fhir-js-enhanced",
+  "version": "1.0.0",
+  "description": "Enhanced FHIR javascript client with advanced retry, caching, and performance optimization",
   "engines": {
     "node": ">=14.0.0"
   },
   "funding": {
     "type": "github",
-    "url": "https://github.com/FHIR/fhir.js"
+    "url": "https://github.com/pramit-shah/fhir.js"
+  },
+  "keywords": [
+    "fhir", 
+    "healthcare", 
+    "interoperability", 
+    "api", 
+    "health-it", 
+    "medical", 
+    "client"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "directories": {
     "lib": "lib",
