@@ -1,3 +1,7 @@
+// DEPRECATED: This adapter uses AngularJS which is no longer maintained and has security vulnerabilities
+// It is recommended to use the native or node adapter instead
+// See SECURITY.md for more information on security concerns with this adapter
+
 (function() {
     var mkFhir = require('../fhir');
     var errorHandling = require('../error-handling');
@@ -7,6 +11,10 @@
     
     // Initialize the logger
     var logger = logging.getLogger('adapter:angularjs');
+    
+    // Console warning for deprecation
+    console.warn('SECURITY WARNING: The AngularJS adapter is deprecated due to security vulnerabilities in AngularJS. ' +
+                 'Consider using the native or node adapter instead. See SECURITY.md for details.');
     
     // Error Types from error-handling module
     var ErrorTypes = errorHandling.ErrorTypes;

@@ -855,9 +855,9 @@
                     throw error;
                 });
             }
-        };
+        }
     }
-    
+
     /**
      * Build a complex chained parameter query
      * 

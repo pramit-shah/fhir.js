@@ -1,7 +1,12 @@
 (function() {
     var mw = require('./core');
 
-    var btoa = require('Base64').btoa;
+    // Use native btoa if available (browsers), or create a node-compatible version using Buffer
+    var btoa = (typeof window !== 'undefined' && window.btoa) 
+        ? window.btoa 
+        : function(str) {
+            return Buffer.from(str).toString('base64');
+        };
 
     exports.$Basic = mw.$$Attr('headers.Authorization', function(args){
         if(args.auth && args.auth.user && args.auth.pass){

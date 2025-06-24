@@ -10,12 +10,13 @@
     "url": "https://github.com/pramit-shah/fhir.js"
   },
   "keywords": [
-    "fhir", 
-    "healthcare", 
-    "interoperability", 
-    "api", 
-    "health-it", 
-    "medical", 
+    "fhir",
+    "FHIR",
+    "healthcare",
+    "interoperability",
+    "api",
+    "health-it",
+    "medical",
     "client"
   ],
   "publishConfig": {
@@ -26,46 +27,61 @@
     "test": "test"
   },
   "devDependencies": {
+    "@babel/core": "^7.23.9",
+    "@babel/plugin-transform-runtime": "^7.27.4",
+    "@babel/preset-env": "^7.23.9",
+    "@babel/runtime": "^7.27.6",
+    "@babel/runtime-corejs3": "^7.27.6",
     "abort-controller": "^3.0.0",
+    "angular": "^1.8.3",
+    "babel-loader": "^9.1.3",
     "babel-polyfill": "^6.26.0",
-    "chance": "^1.1.11", 
+    "chance": "^1.1.13",
     "coffee-loader": "^1.0.1",
     "coffeescript": "^2.7.0",
+    "core-js": "^3.43.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-node": "^11.1.0",
     "karma": "^6.4.2",
     "karma-chrome-launcher": "^3.2.0",
     "karma-coffee-preprocessor": "^1.0.1",
     "karma-mocha": "^2.0.1",
     "karma-webpack": "^5.0.0",
     "mocha": "^10.2.0",
-    "rimraf": "^5.0.1",
+    "rimraf": "^5.0.10",
+    "semver": "^7.5.4",
+    "standard-version": "^9.5.0",
     "typescript": "^5.1.6",
     "webpack": "^5.88.1",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^4.15.1",
+    "webpack-dev-server": "^5.2.2",
     "whatwg-fetch": "^3.6.2"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:FHIR/fhir.js.git"
+    "url": "https://github.com/pramit-shah/fhir.js.git"
   },
   "scripts": {
-    "test": "mocha --require coffeescript/register",
-    "test:watch": "mocha --require coffeescript/register --watch",
+    "test": "mocha test/*.coffee --require coffeescript/register",
+    "test:watch": "mocha test/*.coffee --require coffeescript/register --watch",
     "integrate": "karma start --single-run",
     "integrate:watch": "karma start",
-    "all-tests": "npm run test && npm run integrate",
+    "all-tests": "npm run test",
     "webpack": "webpack --progress",
     "webpack:watch": "webpack --progress --watch",
-    "coffee": "coffee --output lib --compile src",
-    "coffee:watch": "coffee --output lib --compile --watch src",
-    "build": "rimraf dist lib && npm run webpack && npm run coffee",
+    "coffee": "npx coffeescript --output lib --compile src",
+    "coffee:watch": "npx coffeescript --output lib --compile --watch src",
+    "build": "mkdir -p dist lib && npm run webpack && npm run coffee",
     "prepare": "npm run build",
-    "prepublishOnly": "npm run all-tests"
+    "prepublishOnly": "npm run all-tests",
+    "release": "standard-version",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major",
+    "publish:npm": "npm publish",
+    "publish:dry-run": "npm publish --dry-run",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
-  "keywords": [
-    "fhir",
-    "FHIR"
-  ],
   "authors": [
     "Maksym Bodnarchuk <bodnarchuk@gmail.com>",
     "Nikolay Ryzhikov <niquola@gmail.com>",
@@ -73,21 +89,24 @@
     "Pavel Bubentsov <bazzy.bazzy@gmail.com>"
   ],
   "author": "Maksym Bodnarchuk <bodnarchuk@gmail.com>",
+  "contributors": [
+    "Pramit Shah <your.email@example.com>"
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/FHIR/fhir.js/issues"
+    "url": "https://github.com/pramit-shah/fhir.js/issues"
   },
-  "homepage": "https://github.com/FHIR/fhir.js",
+  "homepage": "https://github.com/pramit-shah/fhir.js",
   "dependencies": {
     "merge": "^2.1.1",
-    "node-fetch": "^3.3.1"
+    "node-fetch": "^3.3.2"
   },
   "peerDependencies": {
-    "angular": ">=1.8.0",
+    "angular": ">=1.8.3",
     "jquery": ">=3.0.0"
   },
   "optionalDependencies": {
-    "@types/fhir": "^0.0.37"
+    "@types/fhir": "^0.0.41"
   },
   "files": [
     "dist",

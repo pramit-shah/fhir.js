@@ -1,4 +1,37 @@
-node_modules
-*swp
+# Development files
+.git
+.gitignore
+.github
+.travis.yml
+karma.conf.js
+webpack.config.js
+script/
+integration_test/
+integration_test_buffer/
+bower.json
+REMOVED_BOWER_FILES_NOTICE.md
+REMOVED_BOWER_README_NOTICE.md
+TODO_REMOVE_BOWER_FILES.txt
+
+# Node modules and bower components
+node_modules/
 bower_components/
+
+# Test files
+test/
+fixtures/
+
+# Logs and temporary files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+*swp
 *swo
+
+# Editor-specific files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace

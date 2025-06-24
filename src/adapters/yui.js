@@ -1,3 +1,7 @@
+// DEPRECATED: This adapter uses YUI which is no longer actively maintained
+// It is recommended to use the native or node adapter instead
+// See SECURITY.md for more information on security concerns
+
 (function() {
     var mkFhir = require('../fhir');
     var errorHandling = require('../error-handling');
@@ -7,6 +11,10 @@
     
     // Initialize the logger
     var logger = logging.getLogger('adapter:yui');
+
+    // Console warning for deprecation
+    console.warn('SECURITY NOTICE: The YUI adapter is deprecated as YUI is no longer actively maintained. ' +
+                'Consider using the native or node adapter instead. See SECURITY.md for details.');
 
     var yui = YUI();
 
@@ -52,8 +60,7 @@
     
     // Error classification using the common error-handling module
     function classifyError(error) {
-        return errorHandling.classifyError(error);
-    }
+        if (!error || !error.status) {
             return { type: errorHandling.ErrorTypes.NETWORK, retriable: true };
         }
         

@@ -1,3 +1,6 @@
+// NOTE: This adapter relies on jQuery. Make sure you're using a secure version of jQuery (3.0.0+)
+// See SECURITY.md for more information on security considerations
+
 (function() {
     var mkFhir = require('../fhir');
     var errorHandling = require('../error-handling');
@@ -14,6 +17,15 @@
     if (jquery) {
         dependencyManager.register('jquery', jquery);
         logger.debug('jQuery detected and registered', { version: jquery.fn.jquery });
+        
+        // Check jQuery version for security considerations
+        var jQueryVersionParts = jquery.fn.jquery.split('.');
+        var majorVersion = parseInt(jQueryVersionParts[0], 10);
+        if (majorVersion < 3) {
+            console.warn('SECURITY WARNING: Using jQuery version < 3.0.0 may have security vulnerabilities. ' +
+                       'Consider upgrading to jQuery 3.0.0+. See SECURITY.md for details.');
+            logger.warn('Using potentially vulnerable jQuery version', { version: jquery.fn.jquery });
+        }
     } else {
         logger.error('jQuery not found in window');
         throw new Error('FHIR.js: jQuery not found. Make sure jQuery is loaded before this adapter.');

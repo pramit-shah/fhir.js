@@ -18,14 +18,23 @@
 - Priority-based request handling with optimized batch processing
 - Server health monitoring and adaptive retry mechanisms
 - Funding and maintainers info added
+- Security documentation and vulnerability management
 
-## Goals:
+## Security Considerations
 
- - Support FHIR CRUD operations
- - Friendly and expressive query syntax
- - Support for adapters that provide idiomatic interfaces in angular, jQuery, extjs, etc
- - Support for access control (HTTP basic, OAuth2, Cookies)
- - ...
+This library provides adapters for multiple frameworks, including some legacy frameworks that have known security vulnerabilities:
+
+- The AngularJS adapter depends on the original AngularJS framework, which is deprecated and has unfixed security vulnerabilities
+- We recommend using the Native adapter (for browsers) or Node.js adapter for modern applications
+- See [SECURITY.md](SECURITY.md) for detailed information about security policies and recommendations
+
+## Goals
+
+- Support FHIR CRUD operations
+- Friendly and expressive query syntax
+- Support for adapters that provide idiomatic interfaces in angular, jQuery, extjs, etc
+- Support for access control (HTTP basic, OAuth2, Cookies)
+- ...
 
 ## Development
 
@@ -35,7 +44,7 @@ We recommend installing Node.js using [nvm](https://github.com/nvm-sh/nvm)
 
 Build & test:
 
-```
+```bash
 git clone https://github.com/FHIR/fhir.js
 cd fhir.js
 npm install
@@ -91,6 +100,7 @@ client.errors.retry(failingOperation, {
 ```
 
 Error types available include:
+
 - `NETWORK`: Network connectivity issues
 - `TIMEOUT`: Request timeouts
 - `AUTH`: Authentication/authorization failures
