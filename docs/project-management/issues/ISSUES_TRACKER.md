@@ -4,6 +4,14 @@ This document tracks known issues, planned improvements, and enhancement request
 
 ## Active Issues
 
+### Build & Release
+
+| ID | Description | Priority | Status |
+|----|-------------|----------|--------|
+| BUILD-001 | Syntax Error in src/complexity.js | High | Active |
+| RELEASE-001 | NPM Publishing Process Failures | High | Active |
+| DEP-001 | Outdated Dependencies Requiring Modernization | High | Active |
+
 ### Security
 
 | ID | Description | Priority | Status |
@@ -47,6 +55,7 @@ This document tracks known issues, planned improvements, and enhancement request
 | TEST-002 | Add integration tests with real FHIR servers | Medium | Planned |
 | TEST-003 | Implement automated browser tests | Medium | Planned |
 | TEST-004 | Add performance regression tests | Low | Planned |
+| TEST-005 | CoffeeScript Test Failures and Testing Framework Issues | High | Active |
 
 ## Resolved Issues
 
