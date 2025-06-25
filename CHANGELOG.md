@@ -1,5 +1,16 @@
 # Changelog
 
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### [1.0.1](https://github.com/pramit-shah/fhir.js/compare/v0.0.22...v1.0.1) (2025-06-25)
+
+
+### Bug Fixes
+
+* update deps to address security vulnerabilities ([00dbe33](https://github.com/pramit-shah/fhir.js/commit/00dbe33a468a9650c6a879179d22771b155c98f5))
+
+# Changelog
+
 ## v1.0.0 (2025-06-25)
 
 - Major: Modernized build system (Webpack 5, Mocha/Karma, CoffeeScript 2)
