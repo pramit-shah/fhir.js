@@ -855,7 +855,7 @@
                     throw error;
                 });
             }
-        }; // Changed to semicolon from comma
+        };
     }
 
     /**
