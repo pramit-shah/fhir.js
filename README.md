@@ -18,7 +18,9 @@
 - Priority-based request handling with optimized batch processing
 - Server health monitoring and adaptive retry mechanisms
 - Funding and maintainers info added
-- Security documentation and vulnerability management
+- Comprehensive project management documentation and issue tracking system
+
+For detailed information about the project management, issue tracking, and roadmap, see the [Project Management Documentation](/docs/project-management/PROJECT_MANAGEMENT_INDEX.md).
 
 ## Security Considerations
 
@@ -332,3 +334,18 @@ client.search({type: 'Patient'})
 - [Error Handling Guide](./docs/ERROR_HANDLING.md)
 - [Performance Optimization Guide](./docs/PERFORMANCE_OPTIMIZATION.md)
 - [Integration Examples](./docs/INTEGRATION.md)
+
+
+
+
+
+
+
+
+
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.## LicenseContributions are welcome! Please open issues or pull requests on GitHub. See our [Security Policy](./SECURITY.md) for reporting vulnerabilities.## Contributing## Scripts
+
+- `npm run build`: Build the project
+- `npm run test`: Run tests in Node.js
+- `npm run integrate`: Run tests in browser/karma
+- `npm run dev`: "npm run webpack:watch & npm run coffee:watch"

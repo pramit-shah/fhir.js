@@ -2,6 +2,13 @@
   "name": "fhir-js-enhanced",
   "version": "1.0.0",
   "description": "Enhanced FHIR javascript client with advanced retry, caching, and performance optimization",
+  "maintainers": [
+    {
+      "name": "PyLabs Inc",
+      "email": "pylabsinc@gmail.com",
+      "url": "https://github.com/pramit-shah"
+    }
+  ],
   "engines": {
     "node": ">=14.0.0"
   },
@@ -39,6 +46,7 @@
     "chance": "^1.1.13",
     "coffee-loader": "^1.0.1",
     "coffeescript": "^2.7.0",
+    "concurrently": "^9.2.0",
     "core-js": "^3.43.0",
     "eslint": "^8.57.0",
     "eslint-plugin-node": "^11.1.0",
@@ -59,7 +67,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/pramit-shah/fhir.js.git"
+    "url": "git+https://github.com/pramit-shah/fhir.js.git"
   },
   "scripts": {
     "test": "mocha test/*.coffee --require coffeescript/register",
@@ -72,6 +80,7 @@
     "coffee": "npx coffeescript --output lib --compile src",
     "coffee:watch": "npx coffeescript --output lib --compile --watch src",
     "build": "mkdir -p dist lib && npm run webpack && npm run coffee",
+    "dev": "npm run webpack:watch & npm run coffee:watch",
     "prepare": "npm run build",
     "prepublishOnly": "npm run all-tests",
     "release": "standard-version",
@@ -80,23 +89,36 @@
     "publish:npm": "npm publish",
     "publish:dry-run": "npm publish --dry-run",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "check-updates": "npx npm-check-updates",
+    "update-deps": "npx npm-check-updates -u && npm install",
+    "postversion": "node scripts/notify-update.js"
   },
-  "authors": [
+  "author": "PyLabs Inc <pylabsinc@gmail.com>",
+  "contributors": [
+    "Pramit Shah <pylabsinc@gmail.com>",
     "Maksym Bodnarchuk <bodnarchuk@gmail.com>",
     "Nikolay Ryzhikov <niquola@gmail.com>",
     "Josh Mandel <joshua.mandel@childrens.harvard.edu>",
     "Pavel Bubentsov <bazzy.bazzy@gmail.com>"
   ],
-  "author": "Maksym Bodnarchuk <bodnarchuk@gmail.com>",
-  "contributors": [
-    "Pramit Shah <your.email@example.com>"
-  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/pramit-shah/fhir.js/issues"
+    "url": "https://github.com/pramit-shah/fhir.js/issues",
+    "email": "pylabsinc@gmail.com"
   },
   "homepage": "https://github.com/pramit-shah/fhir.js",
+  "projectRepository": "https://github.com/pramit-shah/fhir.js",
+  "documentation": "https://github.com/pramit-shah/fhir.js/tree/main/docs",
+  "contactEmail": "pylabsinc@gmail.com",
+  "notifications": {
+    "releases": "https://github.com/pramit-shah/fhir.js/releases.atom",
+    "commits": "https://github.com/pramit-shah/fhir.js/commits/main.atom",
+    "issues": "https://github.com/pramit-shah/fhir.js/issues.atom",
+    "discussions": "https://github.com/pramit-shah/fhir.js/discussions.atom",
+    "email": "updates@fhirjs.org"
+  },
+  "projectType": "library",
   "dependencies": {
     "merge": "^2.1.1",
     "node-fetch": "^3.3.2"

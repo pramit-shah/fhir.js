@@ -10,7 +10,7 @@ This library is currently being maintained with security updates.
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability within this library, please send an email to [your.email@example.com](mailto:your.email@example.com). All security vulnerabilities will be promptly addressed.
+If you discover a security vulnerability within this library, please send an email to [pylabsinc@gmail.com](mailto:pylabsinc@gmail.com). All security vulnerabilities will be promptly addressed.
 
 ## Known Vulnerabilities
 

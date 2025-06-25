@@ -19,7 +19,7 @@ after_success:
 - if [ -n "$TRAVIS_TAG" ]; then sed -i "s/0.0.0/$TRAVIS_TAG/g" package.json; fi
 deploy:
   provider: npm
-  email: niquola@gmail.com
+  email: pylabsinc@gmail.com
   api_key:
     secure: XOnOloUekdn7IFgHUzaRx+XxjCVSjWBsAOpsp468omWBn88ifiUY++jt2VplXICcbceFx9EpLb7IHxl2fl0sTwJo0lwwPZDaH+QV2GuP4ue2jh3DeNNSdnOVWYDf4r1drtF7i6+jJN4Ns9jhl+/tjCJmDmNdh6azP6HaTBf2TUI=
   on:
